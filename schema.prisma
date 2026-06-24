@@ -1,0 +1,848 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  STUDENT
+  FACULTY
+  CLUB_ADMIN
+  SUPER_ADMIN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum AssignmentStatus {
+  PENDING
+  SUBMITTED
+  GRADED
+  OVERDUE
+}
+
+enum AssignmentPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum QuizDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuizMode {
+  SOLO
+  MULTIPLAYER
+}
+
+enum QuizBattleStatus {
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum PlacementStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PLACED
+  NOT_PLACED
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  SELECTED
+  REJECTED
+}
+
+enum NoteType {
+  PDF
+  PPT
+  DOC
+  IMAGE
+  OTHER
+}
+
+enum PostCategory {
+  ACADEMICS
+  PLACEMENTS
+  HOSTEL
+  EVENTS
+  GENERAL
+  TECH
+  SPORTS
+}
+
+enum ComplaintStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum ComplaintCategory {
+  WATER
+  INTERNET
+  ELECTRICITY
+  MAINTENANCE
+  CLEANLINESS
+  OTHER
+}
+
+enum MarketplaceCategory {
+  BOOKS
+  ELECTRONICS
+  CYCLES
+  HOSTEL_ITEMS
+  CLOTHING
+  SPORTS
+  OTHER
+}
+
+enum MarketplaceStatus {
+  ACTIVE
+  SOLD
+  REMOVED
+}
+
+enum NotificationType {
+  ASSIGNMENT
+  EVENT
+  QUIZ_BATTLE
+  PLACEMENT
+  MESSAGE
+  COMMUNITY
+  SYSTEM
+  ANNOUNCEMENT
+}
+
+enum EventRegistrationStatus {
+  REGISTERED
+  WAITLISTED
+  CANCELLED
+  ATTENDED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER & PROFILE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id         String   @id @default(cuid())
+  supabaseId String   @unique
+  email      String   @unique
+  role       UserRole @default(STUDENT)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  profile              Profile?
+  attendance           Attendance[]
+  assignments          Assignment[]        @relation("AssignmentStudent")
+  createdAssignments   Assignment[]        @relation("AssignmentCreator")
+  notes                Note[]
+  quizAttempts         QuizAttempt[]
+  quizBattlesAsPlayer1 QuizBattle[]        @relation("QuizBattlePlayer1")
+  quizBattlesAsPlayer2 QuizBattle[]        @relation("QuizBattlePlayer2")
+  placements           Placement?
+  resumes              Resume[]
+  interviewSessions    InterviewSession[]
+  posts                Post[]
+  comments             Comment[]
+  postVotes            PostVote[]
+  bookmarks            Bookmark[]
+  clubMemberships      ClubMember[]
+  eventRegistrations   EventRegistration[]
+  marketplaceItems     MarketplaceItem[]
+  complaints           Complaint[]
+  notifications        Notification[]
+  followers            Follow[]            @relation("UserFollowers")
+  following            Follow[]            @relation("UserFollowing")
+  sentMessages         Message[]           @relation("MessageSender")
+  receivedMessages     Message[]           @relation("MessageReceiver")
+  aiChatSessions       AIChatSession[]
+
+  @@map("users")
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName    String
+  lastName     String
+  displayName  String?
+  avatar       String?
+  bio          String?
+  rollNumber   String?  @unique
+  branch       String?
+  semester     Int?
+  year         Int?
+  college      String?
+  phone        String?
+  githubUrl    String?
+  linkedinUrl  String?
+  portfolioUrl String?
+  skills       String[]
+  achievements String[]
+  cgpa         Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACADEMIC
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Subject {
+  id          String   @id @default(cuid())
+  name        String
+  code        String
+  credits     Int      @default(3)
+  facultyName String?
+  semester    Int
+  branch      String
+  createdAt   DateTime @default(now())
+
+  attendance     Attendance[]
+  timetableSlots TimetableSlot[]
+  assignments    Assignment[]
+  notes          Note[]
+  quizzes        Quiz[]
+
+  @@map("subjects")
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  date      DateTime
+  status    AttendanceStatus
+  remarks   String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([userId, subjectId, date])
+  @@map("attendance")
+}
+
+model Timetable {
+  id        String   @id @default(cuid())
+  userId    String
+  semester  Int
+  branch    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slots TimetableSlot[]
+
+  @@map("timetables")
+}
+
+model TimetableSlot {
+  id          String    @id @default(cuid())
+  timetableId String
+  timetable   Timetable @relation(fields: [timetableId], references: [id], onDelete: Cascade)
+  subjectId   String
+  subject     Subject   @relation(fields: [subjectId], references: [id])
+  dayOfWeek   Int // 0=Sunday, 1=Monday ... 6=Saturday
+  startTime   String // "09:00"
+  endTime     String // "10:00"
+  room        String?
+  type        String    @default("LECTURE") // LECTURE, LAB, TUTORIAL
+
+  @@map("timetable_slots")
+}
+
+model Assignment {
+  id            String             @id @default(cuid())
+  title         String
+  description   String?
+  subjectId     String
+  subject       Subject            @relation(fields: [subjectId], references: [id])
+  creatorId     String
+  creator       User               @relation("AssignmentCreator", fields: [creatorId], references: [id])
+  dueDate       DateTime
+  maxMarks      Float              @default(100)
+  priority      AssignmentPriority @default(MEDIUM)
+  attachmentUrl String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  submissions AssignmentSubmission[]
+  assignedTo  User[]                 @relation("AssignmentStudent")
+
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id           String           @id @default(cuid())
+  assignmentId String
+  assignment   Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  userId       String
+  fileUrl      String?
+  content      String?
+  status       AssignmentStatus @default(PENDING)
+  marks        Float?
+  feedback     String?
+  submittedAt  DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([assignmentId, userId])
+  @@map("assignment_submissions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Note {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  subjectId   String?
+  subject     Subject? @relation(fields: [subjectId], references: [id])
+  uploaderId  String
+  uploader    User     @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  fileUrl     String
+  fileType    NoteType
+  fileSize    Int? // bytes
+  isPublic    Boolean  @default(true)
+  tags        String[]
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  summaries  NoteSummary[]
+  flashcards Flashcard[]
+  quizzes    Quiz[]        @relation("NoteQuizzes")
+  bookmarks  Bookmark[]
+
+  @@map("notes")
+}
+
+model NoteSummary {
+  id        String   @id @default(cuid())
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  type      String // SUMMARY, KEY_CONCEPTS, VIVA_QUESTIONS, REVISION
+  content   String
+  createdAt DateTime @default(now())
+
+  @@map("note_summaries")
+}
+
+model Flashcard {
+  id         String         @id @default(cuid())
+  noteId     String
+  note       Note           @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  question   String
+  answer     String
+  difficulty QuizDifficulty @default(MEDIUM)
+  createdAt  DateTime       @default(now())
+
+  @@map("flashcards")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUIZ
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Quiz {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  subjectId   String?
+  subject     Subject?       @relation(fields: [subjectId], references: [id])
+  noteId      String?
+  note        Note?          @relation("NoteQuizzes", fields: [noteId], references: [id])
+  difficulty  QuizDifficulty @default(MEDIUM)
+  timeLimit   Int            @default(600) // seconds
+  isPublic    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+  battles   QuizBattle[]
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id            String         @id @default(cuid())
+  quizId        String
+  quiz          Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question      String
+  options       String[]
+  correctAnswer String
+  explanation   String?
+  difficulty    QuizDifficulty @default(MEDIUM)
+  marks         Float          @default(1)
+  createdAt     DateTime       @default(now())
+
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers     Json // { questionId: selectedAnswer }
+  score       Float
+  totalMarks  Float
+  timeTaken   Int? // seconds
+  completedAt DateTime @default(now())
+
+  @@map("quiz_attempts")
+}
+
+model QuizBattle {
+  id           String           @id @default(cuid())
+  quizId       String
+  quiz         Quiz             @relation(fields: [quizId], references: [id])
+  player1Id    String
+  player1      User             @relation("QuizBattlePlayer1", fields: [player1Id], references: [id])
+  player2Id    String?
+  player2      User?            @relation("QuizBattlePlayer2", fields: [player2Id], references: [id])
+  status       QuizBattleStatus @default(WAITING)
+  player1Score Float?
+  player2Score Float?
+  winnerId     String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime         @default(now())
+
+  @@map("quiz_battles")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLACEMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Company {
+  id                   String    @id @default(cuid())
+  name                 String
+  logo                 String?
+  website              String?
+  description          String?
+  industry             String?
+  minCgpa              Float     @default(0)
+  allowedBranches      String[]
+  package              String?
+  role                 String?
+  visitDate            DateTime?
+  registrationDeadline DateTime?
+  createdAt            DateTime  @default(now())
+
+  applications PlacementApplication[]
+
+  @@map("companies")
+}
+
+model Placement {
+  id        String          @id @default(cuid())
+  userId    String          @unique
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    PlacementStatus @default(NOT_STARTED)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  applications PlacementApplication[]
+
+  @@map("placements")
+}
+
+model PlacementApplication {
+  id          String            @id @default(cuid())
+  placementId String
+  placement   Placement         @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  companyId   String
+  company     Company           @relation(fields: [companyId], references: [id])
+  status      ApplicationStatus @default(APPLIED)
+  appliedAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  notes       String?
+
+  @@unique([placementId, companyId])
+  @@map("placement_applications")
+}
+
+model Resume {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  fileUrl   String
+  atsScore  Float?
+  feedback  Json? // AI feedback data
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("resumes")
+}
+
+model InterviewSession {
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type               String // HR, TECHNICAL, BEHAVIORAL
+  questions          Json // [{question, answer, feedback, score}]
+  overallScore       Float?
+  confidenceScore    Float?
+  communicationScore Float?
+  feedback           String?
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+
+  @@map("interview_sessions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMMUNITY
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Post {
+  id        String       @id @default(cuid())
+  authorId  String
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  category  PostCategory @default(GENERAL)
+  tags      String[]
+  imageUrl  String?
+  isPinned  Boolean      @default(false)
+  isLocked  Boolean      @default(false)
+  viewCount Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  comments  Comment[]
+  votes     PostVote[]
+  bookmarks Bookmark[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  parentId  String? // for nested comments
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  votes CommentVote[]
+
+  @@map("comments")
+}
+
+model PostVote {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  value     Int // 1 = upvote, -1 = downvote
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@map("post_votes")
+}
+
+model CommentVote {
+  id        String   @id @default(cuid())
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  value     Int
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId])
+  @@map("comment_votes")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  noteId    String?
+  note      Note?    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("bookmarks")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLUBS & EVENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Club {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  logo        String?
+  banner      String?
+  category    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members       ClubMember[]
+  events        Event[]
+  announcements ClubAnnouncement[]
+
+  @@map("clubs")
+}
+
+model ClubMember {
+  id       String   @id @default(cuid())
+  clubId   String
+  club     Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     String   @default("MEMBER") // ADMIN, MEMBER
+  joinedAt DateTime @default(now())
+
+  @@unique([clubId, userId])
+  @@map("club_members")
+}
+
+model Event {
+  id           String    @id @default(cuid())
+  title        String
+  description  String?
+  clubId       String?
+  club         Club?     @relation(fields: [clubId], references: [id])
+  banner       String?
+  location     String?
+  isOnline     Boolean   @default(false)
+  onlineLink   String?
+  startDate    DateTime
+  endDate      DateTime?
+  maxAttendees Int?
+  isPublic     Boolean   @default(true)
+  tags         String[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  registrations EventRegistration[]
+
+  @@map("events")
+}
+
+model EventRegistration {
+  id        String                  @id @default(cuid())
+  eventId   String
+  event     Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    EventRegistrationStatus @default(REGISTERED)
+  createdAt DateTime                @default(now())
+
+  @@unique([eventId, userId])
+  @@map("event_registrations")
+}
+
+model ClubAnnouncement {
+  id        String   @id @default(cuid())
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@map("club_announcements")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARKETPLACE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model MarketplaceItem {
+  id          String              @id @default(cuid())
+  sellerId    String
+  seller      User                @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  price       Float
+  category    MarketplaceCategory
+  condition   String              @default("GOOD") // NEW, LIKE_NEW, GOOD, FAIR
+  images      String[]
+  status      MarketplaceStatus   @default(ACTIVE)
+  location    String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  messages Message[]
+
+  @@map("marketplace_items")
+}
+
+model Message {
+  id         String           @id @default(cuid())
+  senderId   String
+  sender     User             @relation("MessageSender", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User             @relation("MessageReceiver", fields: [receiverId], references: [id])
+  itemId     String?
+  item       MarketplaceItem? @relation(fields: [itemId], references: [id])
+  content    String
+  isRead     Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+
+  @@map("messages")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOST & FOUND
+// ─────────────────────────────────────────────────────────────────────────────
+
+model LostFoundItem {
+  id          String   @id @default(cuid())
+  reporterId  String
+  title       String
+  description String?
+  category    String?
+  isLost      Boolean  @default(true) // true=lost, false=found
+  images      String[]
+  location    String?
+  date        DateTime
+  contactInfo String?
+  isResolved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("lost_found_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HOSTEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Complaint {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  category    ComplaintCategory
+  status      ComplaintStatus   @default(OPEN)
+  roomNumber  String?
+  images      String[]
+  resolvedAt  DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("complaints")
+}
+
+model MessMenu {
+  id        String   @id @default(cuid())
+  dayOfWeek Int // 0-6
+  mealType  String // BREAKFAST, LUNCH, SNACKS, DINNER
+  items     String[]
+  calories  Float?
+  protein   Float?
+  carbs     Float?
+  fat       Float?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([dayOfWeek, mealType])
+  @@map("mess_menu")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AIChatSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String   @default("New Chat")
+  messages  Json // [{role, content, createdAt}]
+  context   String? // page context
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ai_chat_sessions")
+}
+
+model CareerRoadmap {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  goal      String
+  roadmap   Json // AI generated roadmap data
+  skills    String[]
+  courses   Json?
+  projects  Json?
+  timeline  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("career_roadmaps")
+}
