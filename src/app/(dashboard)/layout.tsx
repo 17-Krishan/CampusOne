@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma/client";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

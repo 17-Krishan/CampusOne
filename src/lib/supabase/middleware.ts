@@ -44,20 +44,29 @@ export async function updateSession(request: NextRequest) {
     "/forgot-password",
     "/reset-password",
     "/",
+    "/api/auth/confirm",  // Supabase email confirmation handler
+    "/api/auth/callback", // OAuth callback
   ];
 
   const isPublicPath = publicPaths.some(
-    (p) => pathname === p || pathname.startsWith(p + "?")
+    (p) => pathname === p || pathname.startsWith(p + "?") || pathname.startsWith(p + "/")
   );
 
-  if (!user && !isPublicPath) {
+  // Also allow all /api/ routes through (they handle their own auth)
+  const isApiRoute = pathname.startsWith("/api/");
+
+  if (!user && !isPublicPath && !isApiRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (user && (pathname === "/login" || pathname === "/signup")) {
+  // Don't redirect away from reset-password even if user session exists
+  // (user has a temporary recovery session at this point)
+  const isResetPassword = pathname === "/reset-password";
+
+  if (user && (pathname === "/login" || pathname === "/signup") && !isResetPassword) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

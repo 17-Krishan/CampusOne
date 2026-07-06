@@ -1,15 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth.store";
 import type { AuthUser } from "@/types";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading, setInitialized, clearUser } = useAuthStore();
-  const [supabase] = useState(() => createSupabaseBrowserClient());
+  const supabase = createSupabaseBrowserClient();
+  const isFetchingRef = useRef(false);
+
+  async function fetchUser() {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    try {
+      const response = await fetch("/api/auth/me");
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user as AuthUser);
+      } else {
+        clearUser();
+      }
+    } catch {
+      clearUser();
+    } finally {
+      isFetchingRef.current = false;
+    }
+  }
 
   useEffect(() => {
+    let mounted = true;
+
     async function getInitialSession() {
       setLoading(true);
       try {
@@ -17,22 +38,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: { user: supabaseUser },
         } = await supabase.auth.getUser();
 
+        if (!mounted) return;
+
         if (supabaseUser) {
-          const response = await fetch("/api/auth/me");
-          if (response.ok) {
-            const data = await response.json();
-            setUser(data.user as AuthUser);
-          } else {
-            clearUser();
-          }
+          await fetchUser();
         } else {
           clearUser();
         }
       } catch {
-        clearUser();
+        if (mounted) clearUser();
       } finally {
-        setLoading(false);
-        setInitialized(true);
+        if (mounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
       }
     }
 
@@ -41,31 +60,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
       if (event === "SIGNED_IN" && session?.user) {
-        try {
-          const response = await fetch("/api/auth/me");
-          if (response.ok) {
-            const data = await response.json();
-            setUser(data.user as AuthUser);
-          }
-        } catch {
-          clearUser();
-        }
+        // Only fetch on actual sign-in, not token refreshes
+        await fetchUser();
       }
 
       if (event === "SIGNED_OUT") {
         clearUser();
       }
-
-      if (event === "TOKEN_REFRESHED" && session?.user) {
-        // Token refreshed, no need to refetch user profile
-      }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase, setUser, setLoading, setInitialized, clearUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return <>{children}</>;
 }
