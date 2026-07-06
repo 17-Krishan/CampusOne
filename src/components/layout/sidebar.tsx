@@ -62,9 +62,9 @@ const NAV_SECTIONS = [
   {
     title: "Learning",
     items: [
-      { title: "Notes", href: "/dashboard/notes", icon: BookOpen },
-      { title: "Quiz Arena", href: "/dashboard/quiz", icon: Zap },
-      { title: "Career Mentor", href: "/dashboard/career", icon: TrendingUp },
+      { title: "Notes", href: "/notes", icon: BookOpen },
+      { title: "Quiz Arena", href: "/quiz", icon: Zap },
+      { title: "Career Mentor", href: "/career", icon: TrendingUp },
     ],
   },
   {
