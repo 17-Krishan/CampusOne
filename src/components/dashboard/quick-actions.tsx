@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 const ACTIONS = [
   {
     label: "Mark Attendance",
-    href: "/dashboard/academic/attendance",
+    href: "/academic/attendance",
     icon: CalendarCheck,
     color: "text-emerald-500",
     bg: "bg-emerald-500/10 hover:bg-emerald-500/20",

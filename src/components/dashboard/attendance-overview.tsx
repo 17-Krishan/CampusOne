@@ -42,7 +42,7 @@ export function AttendanceOverview({ stats }: AttendanceOverviewProps) {
               Start marking attendance to see your stats here.
             </p>
             <Button size="sm" asChild>
-              <Link href="/dashboard/academic/attendance">Mark Attendance</Link>
+              <Link href="/academic/attendance">Mark Attendance</Link>
             </Button>
           </div>
         </CardContent>

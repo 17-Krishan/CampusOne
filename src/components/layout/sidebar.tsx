@@ -54,9 +54,9 @@ const NAV_SECTIONS = [
   {
     title: "Academics",
     items: [
-      { title: "Attendance", href: "/dashboard/academic/attendance", icon: CalendarCheck },
-      { title: "Timetable", href: "/dashboard/academic/timetable", icon: Clock },
-      { title: "Assignments", href: "/dashboard/academic/assignments", icon: FileText },
+      { title: "Attendance", href: "/academic/attendance", icon: CalendarCheck },
+      { title: "Timetable", href: "/academic/timetable", icon: Clock },
+      { title: "Assignments", href: "/academic/assignments", icon: FileText },
     ],
   },
   {
