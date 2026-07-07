@@ -227,7 +227,7 @@ model Follow {
 model Subject {
   id          String   @id @default(cuid())
   name        String
-  code        String
+  code        String   @unique
   credits     Int      @default(3)
   facultyName String?
   semester    Int
@@ -385,7 +385,7 @@ model Flashcard {
 
 model Quiz {
   id          String         @id @default(cuid())
-  title       String
+  title       String         @unique
   description String?
   subjectId   String?
   subject     Subject?       @relation(fields: [subjectId], references: [id])
@@ -458,7 +458,7 @@ model QuizBattle {
 
 model Company {
   id                   String    @id @default(cuid())
-  name                 String
+  name                 String    @unique
   logo                 String?
   website              String?
   description          String?
@@ -783,8 +783,8 @@ model Complaint {
 
 model MessMenu {
   id        String   @id @default(cuid())
-  dayOfWeek Int // 0-6
-  mealType  String // BREAKFAST, LUNCH, SNACKS, DINNER
+  dayOfWeek Int   // 0-6
+  mealType  String  // BREAKFAST, LUNCH, SNACKS, DINNER
   items     String[]
   calories  Float?
   protein   Float?
