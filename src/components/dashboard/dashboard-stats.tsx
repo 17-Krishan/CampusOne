@@ -17,6 +17,7 @@ interface DashboardStatsProps {
   pendingAssignments: number;
   avgQuizScore: number;
   placementStatus: PlacementStatus;
+  eligibleCompaniesCount: number;
 }
 
 export function DashboardStats({
@@ -24,13 +25,18 @@ export function DashboardStats({
   pendingAssignments,
   avgQuizScore,
   placementStatus,
+  eligibleCompaniesCount,
 }: DashboardStatsProps) {
-  const placementLabel: Record<PlacementStatus, string> = {
-    NOT_STARTED: "Not Started",
-    IN_PROGRESS: "In Progress",
-    PLACED: "Placed 🎉",
-    NOT_PLACED: "Not Placed",
-  };
+
+  const placementLabel = placementStatus === "PLACED"
+                         ? "Placed 🎉"
+                         : placementStatus === "NOT_PLACED"
+                         ? "Not Placed"
+                         : placementStatus === "IN_PROGRESS"
+                         ? "In Progress"
+                         : eligibleCompaniesCount > 0
+                         ? "Applications Open"
+                         : "Not Started";
 
   const stats = [
     {
@@ -74,7 +80,7 @@ export function DashboardStats({
     },
     {
       label: "Placement Status",
-      value: placementLabel[placementStatus],
+      value: placementLabel,
       icon: Briefcase,
       color: "text-brand-500",
       bg: "bg-brand-500/10",
@@ -83,6 +89,11 @@ export function DashboardStats({
           ? { label: "Congratulations!", positive: true }
           : placementStatus === "IN_PROGRESS"
           ? { label: "Keep going", positive: true }
+          : eligibleCompaniesCount > 0
+          ? {
+              label: `${eligibleCompaniesCount} compan${eligibleCompaniesCount > 1 ? "ies" : "y"} available`,
+              positive: true,
+            }
           : null,
     },
   ];

@@ -151,6 +151,16 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
+  const eligibleCompanies = await prisma.company.count({
+    where: user.profile?.branch
+      ? {
+          allowedBranches: {
+            has: user.profile.branch,
+          },
+        }
+      : undefined,
+  });
+
   const data = await getDashboardData(user.id);
   const firstName = user.profile?.firstName ?? "Student";
 
@@ -189,6 +199,7 @@ export default async function DashboardPage() {
         ).length}
         avgQuizScore={data.avgQuizScore}
         placementStatus={data.placement?.status ?? "NOT_STARTED"}
+        eligibleCompaniesCount={eligibleCompanies}
       />
 
       {/* Main grid */}

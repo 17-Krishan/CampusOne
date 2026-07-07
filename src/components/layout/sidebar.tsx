@@ -70,18 +70,18 @@ const NAV_SECTIONS = [
   {
     title: "Placement",
     items: [
-      { title: "Placement Hub", href: "/dashboard/placement", icon: Briefcase },
+      { title: "Placement Hub", href: "/placement", icon: Briefcase },
     ],
   },
   {
     title: "Campus",
     items: [
-      { title: "Community", href: "/dashboard/community", icon: Users },
-      { title: "Clubs & Events", href: "/dashboard/clubs", icon: Star },
-      { title: "Marketplace", href: "/dashboard/marketplace", icon: ShoppingBag },
-      { title: "Lost & Found", href: "/dashboard/lost-found", icon: Search },
-      { title: "Hostel", href: "/dashboard/hostel", icon: Home },
-      { title: "Network", href: "/dashboard/network", icon: Network },
+      { title: "Community", href: "/community", icon: Users },
+      { title: "Clubs & Events", href: "/clubs", icon: Star },
+      { title: "Marketplace", href: "/marketplace", icon: ShoppingBag },
+      { title: "Lost & Found", href: "/lost-found", icon: Search },
+      { title: "Hostel", href: "/hostel", icon: Home },
+      { title: "Network", href: "/network", icon: Network },
     ],
   },
 ] as const;
