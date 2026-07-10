@@ -77,7 +77,7 @@ export function MockInterviewPlayer({ type, onBack }: MockInterviewPlayerProps) 
 
       setQuestionCount(1);
     } catch(err: any) {
-      console.error(err)
+      // console.error(err)
       toast.error("Failed to start interview.");
       setTimeout(() => {
         onBack();
@@ -144,7 +144,7 @@ export function MockInterviewPlayer({ type, onBack }: MockInterviewPlayerProps) 
         setQuestionCount((c) => c + 1);
       }
     } catch (err: any) {
-      console.error(err);
+      // console.error(err);
 
       toast.error(
         "AI service quota exceeded. Please try again later."
