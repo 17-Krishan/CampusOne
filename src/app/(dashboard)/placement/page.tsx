@@ -39,10 +39,17 @@ export default async function PlacementPage() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.interviewSession.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
+      where: {
+        userId: user.id,
+        completedAt: {
+          not: null,
+        },
+      },
+      orderBy: {
+        completedAt: "desc",
+      },
       take: 5,
-    }),
+    })
   ]);
 
   return (

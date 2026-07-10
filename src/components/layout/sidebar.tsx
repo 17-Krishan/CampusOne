@@ -47,8 +47,8 @@ const NAV_SECTIONS = [
     title: "Overview",
     items: [
       { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
-      { title: "AI Assistant", href: "/dashboard/ai", icon: Bot },
-      { title: "Notifications", href: "/dashboard/notifications", icon: Bell, badge: "unread" },
+      { title: "AI Assistant", href: "/ai", icon: Bot },
+      { title: "Notifications", href: "/notifications", icon: Bell, badge: "unread" },
     ],
   },
   {
