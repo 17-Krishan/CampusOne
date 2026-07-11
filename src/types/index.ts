@@ -136,8 +136,10 @@ export type ClubWithMembers = Club & {
 
 export type EventWithDetails = Event & {
   club: Club | null;
-  registrations: EventRegistration[];
-  _count: { registrations: number };
+  registrations: {
+    userId: string;
+    status: EventRegistrationStatus;
+  }[];
 };
 
 export type MarketplaceItemWithSeller = MarketplaceItem & {
