@@ -99,7 +99,7 @@ export function SignUpForm() {
           Create your account
         </h1>
         <p className="text-muted-foreground mt-1.5">
-          Join thousands of students on CampusOne
+          Join your fellow students on CampusOne
         </p>
       </div>
 

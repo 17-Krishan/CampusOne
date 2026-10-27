@@ -55,7 +55,7 @@ export default function AuthLayout({
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 mt-auto">
+          {/* <div className="grid grid-cols-3 gap-6 mt-auto">
             {[
               { label: "Students", value: "50K+" },
               { label: "Colleges", value: "200+" },
@@ -68,7 +68,7 @@ export default function AuthLayout({
                 <div className="text-sm text-white/50 mt-0.5">{stat.label}</div>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
 

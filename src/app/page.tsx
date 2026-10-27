@@ -112,7 +112,7 @@ export default async function HomePage() {
               Ready to get started?
             </h2>
             <p className="text-white/70 mb-8">
-              Join 50,000+ students already using CampusOne.
+              Join thousands of students on CampusOne.
             </p>
             <Button
               size="lg"
