@@ -8,12 +8,10 @@
 
 ## ✨ Features Implemented
 
-### 🔐 Authentication & User Management
+### 🔐 Authentication 
 
 * Secure authentication using **Supabase Auth**
-* Email verification and password reset
-* Role-based access control
-* Persistent user sessions
+* Email verification
 
 ### 📊 Student Dashboard
 
@@ -34,7 +32,7 @@
 * AI-powered mock interviews
 * ATS resume analyzer
 * Behavioral, Technical, and HR interview simulations
-* Interview history and feedback reports
+* Interview history 
 
 ### 🤖 AI Features
 
@@ -62,7 +60,6 @@
 * Club discovery and memberships
 * Event registrations and cancellations
 * Waitlist management
-* Notifications for registrations
 
 ### 🏠 Hostel Module
 
@@ -78,12 +75,6 @@
 * Student profiles and social links
 * Search and filtering by skills and branch
 
-### 🔔 Notifications
-
-* System notifications
-* Event notifications
-* Follow notifications
-* Real-time updates
 
 ---
 
@@ -110,12 +101,6 @@
 
 * Google Gemini API
 
-## Other Tools
-
-* UploadThing / File Upload APIs
-* Sonner Toast
-* Zod Validation
-
 ---
 
 # 🗄 Database
@@ -130,7 +115,6 @@ Built using **Prisma ORM + PostgreSQL** with modules including:
 * Events & Registrations
 * Marketplace Listings
 * Hostel Complaints
-* Notifications
 * Student Network (Follow System)
 
 ---
